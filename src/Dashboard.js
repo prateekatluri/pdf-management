@@ -9,7 +9,7 @@ import { toast } from 'react-toastify';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material'
 
 
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 const DashboardPage = () => {
   const [pdfFiles, setPdfFiles] = useState([]);
