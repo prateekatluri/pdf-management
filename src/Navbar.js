@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 const Navbar = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [token, setToken] = useState('');
-
+  const [currentPdf,setCurrentPdf] = useState()
   useEffect(()=>{
     setLoggedIn(localStorage.getItem("loggedin"));
     setToken(localStorage.getItem("token"));
@@ -60,7 +60,7 @@ const Navbar = () => {
         </div>
       </nav>
     </div>
-    <MyContext.Provider value={{ loggedIn, setLoggedIn, token, setToken }}>
+    <MyContext.Provider value={{ loggedIn, setLoggedIn, token, setToken,currentPdf,setCurrentPdf }}>
       <Outlet/>
     </MyContext.Provider>
     </>

@@ -2,84 +2,40 @@ import React, { useState, useEffect, useContext } from 'react';
 import { MyContext } from './context';
 import axios from 'axios';
 import UploadFile from './FileUpload';
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document,Page,pdfjs} from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { toast } from 'react-toastify';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material'
-
+import ShareIcon from '@mui/icons-material/Share';
+// Import the styles
+import '@react-pdf-viewer/core/lib/styles/index.css';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
+
 const DashboardPage = () => {
   const [pdfFiles, setPdfFiles] = useState([]);
-  const { loggedIn, setLoggedIn, token, setToken } = useContext(MyContext);
+  const { loggedIn, setLoggedIn, token, setToken,currentPdf,setCurrentPdf } = useContext(MyContext);
   const [uploadStatus, setUploadStatus] = useState(true);
-  const [numPages, setNumPages] = useState(null);
   const [email, setEmail] = useState('');
-  const [showEmailInput, setShowEmailInput] = useState(false);
-  const [showCommentsDialog, setShowCommentsDialog] = useState(false);
-  const [comments, setComments] = useState('');
-  const [allComments, setAllComments] = useState([]);
-  const [file_id,setfileid] = useState()
-  const handleOpenComments = (id) => {
-    // Open the comments dialog
-    console.log(id)
-    setfileid(id)
-    handleViewComments(id);
-    setShowCommentsDialog(true);
+  const [showEmailInput, setShowEmailInput] = useState();
+
+  const handleMoreDetails = (pdfFile) => {
+   
+    setCurrentPdf(pdfFile);
+    console.log(currentPdf);
+    window.location.href= `/pdf-view/${pdfFile.id}`
   };
 
-  const handleCloseComments = () => {
-    // Close the comments dialog
-    setShowCommentsDialog(false);
-    setfileid(undefined);
-    setComments('')
-    setAllComments([])
-  };
-
-  const handleSaveComments = (comments) => {
-
-    console.log(file_id)
-    axios({
-        method: 'post',
-        url: `https://pdf-project-392114.el.r.appspot.com/api/v1/comment/add/${file_id}/${comments}`,
-        headers: { 'x-access-token': localStorage.getItem('token') },
-      })
-        .then((response) => response)
-        .then((data) => {
-          console.log(data)
-          toast('Comments saved');
-        })
-        .catch((error) => {
-        toast.error('Comments not saved');
-          console.log(error);
-        });
-  }
-
-  const handleViewComments = (fileId) => {
-    axios({
-        method: 'get',
-        url: `https://pdf-project-392114.el.r.appspot.com/api/v1/comment/${fileId}`,
-        headers: { 'x-access-token': localStorage.getItem('token') },
-      })
-        .then((response) => response.data.data)
-        .then((data) => {
-          console.log(data)
-          setAllComments(data)
-          toast('successfully displaying comment');
-        })
-        .catch((error) => {
-        toast.error('error displaying comment');
-          console.log(error);
-        });
-  }
   useEffect(() => {
     fetchPdfFiles();
-  }, [loggedIn, uploadStatus]);
+    
+  }, [uploadStatus]);
 
   
   const fetchPdfFiles = () => {
+    
     axios({
       method: 'get',
       url: 'https://pdf-project-392114.el.r.appspot.com/api/v1/file/',
@@ -109,13 +65,13 @@ const DashboardPage = () => {
       })
       .catch((error) => console.log(error));
   };
-  const handleShareSubmit = () => {
-    console.log("ffgdfgdf")
-    setShowEmailInput(true);
+  const handleShareSubmit = (id) => {
+    setShowEmailInput(id);
     console.log(showEmailInput)
   }
   const handleShare = (id) => {
     console.log(id)
+    if(!email) return
     axios({
         method: 'get',
         url: `https://pdf-project-392114.el.r.appspot.com/api/v1/file/share/${id}/${email}`,
@@ -124,8 +80,8 @@ const DashboardPage = () => {
         .then((response) => response.data.data)
         .then((data) => {
          toast("Successfully shared file")
-         setShowEmailInput(false)
-
+         setShowEmailInput()
+         setEmail('')
         })
         .catch((error) => {
 
@@ -145,16 +101,20 @@ const DashboardPage = () => {
             </div>
           ) : (
             pdfFiles.map((pdfFile) => (
+              
               <div
                 key={pdfFile.id}
                 className="bg-gray-200 w-5/5 m-1 h-[500px] rounded shadow flex flex-col "
               >
+              
                 <div className="flex justify-center">
+                
                 {pdfFile.sharedLink ? (
                     <div className=" h-72 w-72 mt-3 p-4 rounded shadow flex justify-center items-center">
                     <Document file={pdfFile.sharedLink}>
                         <Page width={200} pageNumber={1} />
                     </Document>
+                    {/* <Viewer fileUrl={pdfFile.sharedLink} initialPage={1} defaultScale={defaultScale} defaultScrollMode={defaultScrollMode}/> */}
                     </div>
                   ) : (
                     <div className="bg-gray-400  h-72 w-72 mt-3 p-4 rounded shadow flex justify-center items-center">
@@ -163,7 +123,7 @@ const DashboardPage = () => {
                   )}
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="text-lg font-bold text-center mb-2 break-all">{pdfFile.filename}</h3>
+                  <h3 className="text-lg font-bold text-center mb-2 break-all">{pdfFile.isShared && <ShareIcon />} {pdfFile.filename}</h3>
                   <div className="flex mb-2 flex-col space-y-3">
                     <button
                       className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4  rounded "
@@ -171,7 +131,7 @@ const DashboardPage = () => {
                     >
                       Download
                     </button>
-                     {showEmailInput && (
+                     {showEmailInput == pdfFile.id && (
             <div className="flex flex-col space-y-3">
               <input
                 type="email"
@@ -184,49 +144,14 @@ const DashboardPage = () => {
               </button>
             </div>
           )}
-          {!showEmailInput && (
-            <button onClick={()=>handleShareSubmit()} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+          {showEmailInput!= pdfFile.id && (
+            <button onClick={()=>handleShareSubmit(pdfFile.id)} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
               Share
             </button>
           )}
-          {/* Button to open comments dialog */}
-          <Button variant="contained" color="primary" onClick={()=>{console.log(pdfFile.id); handleOpenComments(pdfFile.id)}}>
-            Add Comments
+          <Button variant="contained" color="primary" onClick={()=>{console.log(pdfFile); handleMoreDetails(pdfFile)}}>
+            More Details
           </Button>
-
-          {/* Comments dialog */}
-          <Dialog open={showCommentsDialog} onClose={handleCloseComments}>
-            <DialogTitle>Add Comments</DialogTitle>
-            <DialogContent>
-              {/* Render the comments inside the dialog */}
-              {allComments.map((comment, index) => (
-                <div key={index}>
-                  <p>{comment.content}</p>
-                  <hr />
-                </div>
-              ))}
-
-              {/* Comment input */}
-              <TextField
-                multiline
-                rows={4}
-                variant="outlined"
-                placeholder="Enter your comments..."
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                fullWidth
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseComments} color="primary">
-                Cancel
-              </Button>
-              <Button onClick={()=>handleSaveComments(comments)} color="primary">
-                Save
-              </Button>
-            </DialogActions>
-          </Dialog>
-
                   </div>
                 </div>
               </div>

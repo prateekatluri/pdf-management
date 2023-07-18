@@ -8,6 +8,7 @@ import SignupPage from './Signup';
 import LoginPage from './Login';
 import DashboardPage from './Dashboard';
 import UploadFile from './FileUpload';
+import PdfView from './PdfView';
 const Router = createBrowserRouter([
     {
       path: "/",
@@ -33,6 +34,10 @@ const Router = createBrowserRouter([
         {
           path: "/upload",
           element: <UploadFile />,
+        },
+        {
+          path: "/pdf-view/:fileId",
+          element: <PdfView />,
         }
       ]
     },

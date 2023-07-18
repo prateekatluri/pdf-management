@@ -21,7 +21,7 @@ const UploadFile = (props) => {
       .then((response) => response.data)
       .then((data) =>{ 
         toast("Successfully uploaded file")
-        props.comp.setUploadStatus(!props.comp.uploadStatus)
+        setTimeout(() => {console.log("FETCHING AFTER 5SEC");props.comp.setUploadStatus(data)},4000)
         })
       .catch((error) => {
         const errorMsg = error.response.data.explaination
